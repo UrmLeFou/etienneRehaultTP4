@@ -14,6 +14,9 @@ namespace Pizza1.Utils
         private FakeDbPizza()
         {
             pizzas = this.GetListPizzas();
+            ingredients = Pizza.IngredientsDisponibles;
+            pates = Pizza.PatesDisponibles;
+            
         }
 
         public static FakeDbPizza Instance
@@ -35,6 +38,8 @@ namespace Pizza1.Utils
         }
 
         private List<Pizza> pizzas;
+        private List<Ingredient> ingredients;
+        private List<Pate> pates;
 
         public List<Pizza> Pizzas
         {

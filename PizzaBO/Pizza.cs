@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,8 +10,13 @@ namespace Pizzas_BO
     public class Pizza
     {
         public int Id { get; set; }
+
+        [Required]
+        [StringLength(20, ErrorMessage ="Le nom de la pizza doit avoir entre 5 et 20 caractères", MinimumLength = 5)]
         public string Nom { get; set; }
+
         public Pate Pate { get; set; }
+
         public List<Ingredient> Ingredients { get; set; } = new List<Ingredient>();
 
         public static List<Ingredient> IngredientsDisponibles => new List<Ingredient>

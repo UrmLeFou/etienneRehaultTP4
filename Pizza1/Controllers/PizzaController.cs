@@ -43,21 +43,76 @@ namespace Pizza1.Controllers
         [HttpPost]
         public ActionResult Create(PizzaVM vm)
         {
+            
             try
             {
-                Pizza pizza = vm.Pizza;
+                if (ModelState.IsValid)
+                {
+                    bool isValid = true;
 
-                pizza.Pate = Pizza.PatesDisponibles.FirstOrDefault(p => p.Id == vm.IdPate);
-                pizza.Ingredients = Pizza.IngredientsDisponibles.Where(p => vm.IdIngredients.Contains(p.Id)).ToList();
+                    Pizza pizza = vm.Pizza;
 
-                pizza.Id = FakeDbPizza.Instance.Pizzas.Count == 0 ? 1 : FakeDbPizza.Instance.Pizzas.Max(p => p.Id) + 1;
+                    pizza.Pate = Pizza.PatesDisponibles.FirstOrDefault(p => p.Id == vm.IdPate);
+                    pizza.Ingredients = Pizza.IngredientsDisponibles.Where(p => vm.IdIngredients.Contains(p.Id)).ToList();
 
+                    if (vm.Pizza.Ingredients.Count() < 2 || vm.Pizza.Ingredients.Count() > 5)
+                    {
+                        ModelState.AddModelError("", "La pizza doit avoir entre 2 et 5 ingrédients");
+                        isValid = false;
+                        
+                    }
 
-                FakeDbPizza.Instance.Pizzas.Add(pizza);
+                    if (FakeDbPizza.Instance.Pizzas.FirstOrDefault(p => p.Nom == vm.Pizza.Nom) != null)
+                    {
+                        ModelState.AddModelError("", "Ce nom a déjà été donné");
+                        isValid = false;
+                    }
+
+                    foreach (var pizzaDb in FakeDbPizza.Instance.Pizzas)
+                    {
+                        if (vm.IdIngredients.Count == pizza.Ingredients.Count)
+                        {
+                            bool isDifferent = false;
+
+                            List<Ingredient> ingredientsDb = pizzaDb.Ingredients.OrderBy(p => p.Id).ToList();
+                            vm.IdIngredients = vm.IdIngredients.OrderBy(i => i).ToList();
+
+                            for (int i = 0; i < vm.IdIngredients.Count; i++)
+                            {
+                                if (vm.IdIngredients.ElementAt(i) != ingredientsDb.ElementAt(i).Id)
+                                {
+                                    isDifferent = true;
+                                    break;
+                                }
+                            }
+
+                            if (!isDifferent)
+                            {
+                                ModelState.AddModelError("", "Cette recette existe déjà");
+                                isValid = false;
+                            }
+                        }
+                    }
+
+                    if (isValid == false)
+                    {
+                        vm.Pates = Pizza.PatesDisponibles.Select(p => new SelectListItem { Text = p.Nom, Value = p.Id.ToString() }).ToList();
+                        vm.Ingredients = Pizza.IngredientsDisponibles.Select(i => new SelectListItem { Text = i.Nom, Value = i.Id.ToString() }).ToList();
+                        return View(vm);
+                    }
+
+                    pizza.Id = FakeDbPizza.Instance.Pizzas.Count == 0 ? 1 : FakeDbPizza.Instance.Pizzas.Max(p => p.Id) + 1;
+
+                    FakeDbPizza.Instance.Pizzas.Add(pizza);
+                }
+
                 return RedirectToAction("Index");
             }
             catch
             {
+                vm.Pates = Pizza.PatesDisponibles.Select(p => new SelectListItem { Text = p.Nom, Value = p.Id.ToString() }).ToList();
+                vm.Ingredients = Pizza.IngredientsDisponibles.Select(i => new SelectListItem { Text = i.Nom, Value = i.Id.ToString() }).ToList();
+
                 return View();
             }
         }
